@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Helpers\BaseResponse;
+use App\Models\Eo;
 use App\Models\Merchant;
 use App\Models\Transaction;
 use App\Models\User;
@@ -12,6 +13,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
 {
@@ -35,7 +37,7 @@ class AuthController extends Controller
             }
 
             $token = $user->createToken("app_token")->plainTextToken;
-            return BaseResponse::success("Login Succeed", ["token" => $token]);
+            return BaseResponse::success("Login Succeed", ["token" => $token, "type" => $user['type']]);
         } catch (Exception $error) {
             return BaseResponse::error("Invalid phone/password", 500, $error->getMessage());
         }
@@ -96,6 +98,53 @@ class AuthController extends Controller
         }
     }
 
+    public function signupEo(Request $request)
+    {
+        try {
+            $validated = $request->validate([
+                "email" => "required|email|unique:users,email",
+                "phone" => "required|regex:/^08[0-9]{2,20}$/|unique:users,phone",
+                "password" => "required|string|min:8|confirmed",
+                "rekening" => "required|string",
+                "companyName" => "required",
+                "companyNib" => "required",
+                "companyPic" => "required",
+                "companyPicPhone" => "required|regex:/^08[0-9]{2,20}$/",
+                "companyPicEmail" => "required|email",
+                "companyAddress" => "required",
+
+            ]);
+
+            DB::transaction(function () use ($validated, &$user) {
+                $user = User::create([
+                    "email" => $validated['email'],
+                    "phone" => $validated['phone'],
+                    "password" => Hash::make($validated['password']),
+                    "rekening" => Crypt::encryptString($validated['rekening']),
+                    "type" => "eo",
+                    "fullName" => "",
+                    "firstName" => "",
+                    "lastName" => "",
+                ]);
+
+                $eo = Eo::create([
+                    "id_user" => $user->id,
+                    "name" => $validated['companyName'],
+                    "nib" => $validated['companyNib'],
+                    "pic" => $validated['companyPic'],
+                    "picPhone" => $validated['companyPicPhone'],
+                    "email" => $validated['companyPicEmail'],
+                    "address" => $validated['companyAddress'],
+                    "document" => "https://cdn.mfadlilhs.site/dpka/activities/banner/1732302890812-ASA.png"
+                ]);
+            });
+
+            return BaseResponse::success("Signup Successfully", $user);
+        } catch (Exception $error) {
+            return BaseResponse::error("Error while signup", 500, $error->getMessage());
+        }
+    }
+
     public function checkPhone(Request $request)
     {
         try {
@@ -109,6 +158,8 @@ class AuthController extends Controller
                 return BaseResponse::error("Phone number is taken", 500, "Phone number is taken");
             }
             return BaseResponse::success("Phone number is available", []);
+        } catch (ValidationException $validationError) {
+            return BaseResponse::error("Validation error", 422, json_encode($validationError->errors()));
         } catch (Exception $error) {
             return BaseResponse::error("Phone number is taken", 500, $error->getMessage());
         }

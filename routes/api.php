@@ -24,6 +24,7 @@ Route::get('/user', function (Request $request) {
 Route::prefix("/auth")->group(function () {
     Route::post("/signin", [AuthController::class, 'login']);
     Route::post("/signup", [AuthController::class, 'signup']);
+    Route::post("/signup-eo", [AuthController::class, 'signupEo']);
     Route::post("/phone", [AuthController::class, 'checkPhone']);
     Route::post("/email", [AuthController::class, 'checkEmail']);
 

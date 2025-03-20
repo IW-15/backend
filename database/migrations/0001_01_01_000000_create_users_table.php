@@ -17,9 +17,10 @@ return new class extends Migration
             $table->string('phone')->unique();
             $table->string("rekening");
             $table->string("password");
-            $table->string("fullName");
-            $table->string("firstName");
-            $table->string("lastName");
+            $table->string("fullName")->default("");
+            $table->string("firstName")->default("");
+            $table->string("lastName")->default("");
+            $table->enum("type", ["sme", "eo"])->default("sme");
 
             $table->timestamps();
         });
