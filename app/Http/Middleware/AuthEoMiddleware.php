@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Laravel\Sanctum\PersonalAccessToken;
 
-class AuthMiddleware
+class AuthEoMiddleware
 {
     /**
      * Handle an incoming request.
@@ -30,9 +30,10 @@ class AuthMiddleware
 
             [$id, $token] = explode('|', $bearer, 2);
             $instance = DB::table('personal_access_tokens')->find($id);
+
             if (hash('sha256', $token) === $instance->token) {
                 if ($user = User::find($instance->tokenable_id)) {
-                    if ($user->type == "eo") {
+                    if ($user->type == "sme") {
                         throw new AuthenticationException("Unauthorized Access");
                     }
                     Auth::login($user);

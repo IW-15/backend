@@ -33,7 +33,7 @@ class Event extends Model
 
     protected $casts = [
         'date' => 'date',               // cast date to Carbon instance
-        'time' => 'time',               // cast time to Carbon instance
+        // 'time' => 'date_format:H:i',               // cast time to Carbon instance
         'latitude' => 'double',         // cast latitude to double
         'longitude' => 'double',        // cast longitude to double
         'visitorNumber' => 'int',   // cast visitorNumber to int

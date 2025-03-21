@@ -3,6 +3,8 @@
 use App\Helpers\BaseResponse;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CreditScoreController;
+use App\Http\Controllers\EoEventController;
+use App\Http\Controllers\ImageController;
 use App\Http\Controllers\LoanController;
 use App\Http\Controllers\LoanProfileController;
 use App\Http\Controllers\MerchantController;
@@ -68,6 +70,16 @@ Route::middleware("auth")->group(function () {
     Route::get("/credit-score", [CreditScoreController::class, 'index']);
 });
 
+Route::middleware("auth.eo")->prefix("/eo")->group(function () {
+    Route::prefix("/events")->group(function () {
+        Route::patch("/", [EoEventController::class, 'getAll']);
+        Route::post("/", [EoEventController::class, 'create']);
+        Route::delete("/{idEvent}", [EoEventController::class, 'delete']);
+        Route::post("/{idEvent}/update", [EoEventController::class, 'update']);
+        Route::post("/{idEvent}/publish", [EoEventController::class, 'publish']);
+    });
+});
+
 Route::get("/", function () {
     $dummyTransactions = json_decode(file_get_contents(storage_path('app/public/dummy_transactions.json')), true);
     $selectedTransactions = $dummyTransactions[array_rand($dummyTransactions)];
@@ -85,3 +97,5 @@ Route::get("/", function () {
 Route::get("/jancok", function () {
     return BaseResponse::success("anjir", null);
 });
+
+Route::get('/storage/{filePath}', [ImageController::class, 'getImage']);

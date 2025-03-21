@@ -44,4 +44,9 @@ class User extends Authenticatable
     {
         return $this->hasOne(Merchant::class, 'id_user');
     }
+
+    public function eo()
+    {
+        return $this->hasOne(Eo::class, 'id_user');
+    }
 }
