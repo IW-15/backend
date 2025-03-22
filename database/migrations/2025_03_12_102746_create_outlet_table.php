@@ -22,6 +22,8 @@ return new class extends Migration
             $table->string("email");
             $table->string("rekening");
             $table->string("address");
+            $table->boolean("eventOpen")->default(false);
+            $table->enum("score", ["high", "medium", "low"])->default("low");
 
             $table->timestamps();
 

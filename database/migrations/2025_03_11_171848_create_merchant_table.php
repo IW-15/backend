@@ -23,6 +23,7 @@ return new class extends Migration
             $table->string("photo")->nullable();
             $table->string("license")->nullable();
             $table->string("npwp")->nullable();
+            $table->enum("score", ["high", "medium", "low"])->default("low");
 
             $table->timestamps();
 

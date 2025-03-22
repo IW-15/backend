@@ -23,6 +23,8 @@ class Outlet extends Model
         'email',
         'rekening',
         'address',
+        "eventOpen",
+        "score"
     ];
 
     // Define the relationships
@@ -42,6 +44,7 @@ class Outlet extends Model
     }
 
     protected $casts = [
-        "id_revenue" => "int"
+        "id_revenue" => "int",
+        "eventOpen" => "boolean"
     ];
 }

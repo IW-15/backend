@@ -48,7 +48,7 @@ class AuthController extends Controller
         try {
             $validated = $request->validate([
                 "email" => "required|email|unique:users,email",
-                "phone" => "required|regex:/^(?:\+62|0)8\d{2,3}\s?\d{4,5}\s?\d{0,5}$/|unique:users,phone",
+                "phone" => "required|regex:/^08[0-9]{4,10}$/|unique:users,phone",
                 "password" => "required|string|min:8|confirmed",
                 "rekening" => "required|string",
                 "fullName" => "required|string",
@@ -90,9 +90,39 @@ class AuthController extends Controller
                 }
 
                 Transaction::insert($selectedTransactions);
+
+                $transactions = Transaction::where("id_user", $user->id)->get();
+
+                // Initialize totals
+                $totalIncome = 0;
+                $totalOutcome = 0;
+
+                // Loop through transactions to calculate totals
+                foreach ($transactions as $transaction) {
+                    if ($transaction->type === 'credit') {
+                        $totalIncome += $transaction->amount;
+                    } elseif ($transaction->type === 'debit') {
+                        $totalOutcome += $transaction->amount;
+                    }
+                }
+
+                if ($totalIncome > 4 * $totalOutcome) {
+                    $score = "high";
+                } else if ($totalIncome <= 4 * $totalOutcome || $totalIncome > 1.5 * $totalOutcome) {
+                    $score = "medium";
+                } else {
+                    $score = "low";
+                }
+                echo $score;
+                echo $totalIncome;
+                echo $totalOutcome;
+
+                $merchant->update(["score" => $score]);
             });
 
             return BaseResponse::success("Signup Successfully", $user);
+        } catch (ValidationException $validationError) {
+            return BaseResponse::error("Validation error", 422, json_encode($validationError->errors()));
         } catch (Exception $error) {
             return BaseResponse::error("Error while signup", 500, $error->getMessage());
         }

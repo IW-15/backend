@@ -4,6 +4,7 @@ use App\Helpers\BaseResponse;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CreditScoreController;
 use App\Http\Controllers\EoEventController;
+use App\Http\Controllers\EventInvitationController;
 use App\Http\Controllers\ImageController;
 use App\Http\Controllers\LoanController;
 use App\Http\Controllers\LoanProfileController;
@@ -11,6 +12,7 @@ use App\Http\Controllers\MerchantController;
 use App\Http\Controllers\OutletController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\RepaymentController;
+use App\Http\Controllers\SmeEventController;
 use App\Http\Controllers\TransactionController;
 use App\Models\CreditScore;
 use App\Models\OutletRevenue;
@@ -53,6 +55,7 @@ Route::middleware("auth")->group(function () {
         Route::post("/", [OutletController::class, 'create']);
         Route::put("/{idOutlet}", [OutletController::class, 'update']);
         Route::delete("/{idOutlet}", [OutletController::class, 'delete']);
+        Route::post("/{idOutlet}/toggle-invitation", [OutletController::class, 'toggleInvitation']);
     });
 
     Route::prefix("/loan")->group(function () {
@@ -68,7 +71,20 @@ Route::middleware("auth")->group(function () {
 
     Route::get("/loan-profile", [LoanProfileController::class, 'index']);
     Route::get("/credit-score", [CreditScoreController::class, 'index']);
+
+    Route::prefix("/events")->group(function () {
+        Route::patch("/", [SmeEventController::class, 'getAll']);
+        Route::patch("/{idEvent}", [SmeEventController::class, 'getDetail']);
+        Route::post("/{idEvent}/regist", [SmeEventController::class, 'regist']);
+    });
+
+    Route::prefix("/registered-event")->group(function () {
+        Route::patch("/", [SmeEventController::class, 'getAllRegis']);
+        Route::patch("/{idRegisteredEvent}", [SmeEventController::class, 'getDetailRegis']);
+        Route::post("/{idRegisteredEvent}/pay", [SmeEventController::class, 'pay']);
+    });
 });
+
 
 Route::middleware("auth.eo")->prefix("/eo")->group(function () {
     Route::prefix("/events")->group(function () {
@@ -77,6 +93,19 @@ Route::middleware("auth.eo")->prefix("/eo")->group(function () {
         Route::delete("/{idEvent}", [EoEventController::class, 'delete']);
         Route::post("/{idEvent}/update", [EoEventController::class, 'update']);
         Route::post("/{idEvent}/publish", [EoEventController::class, 'publish']);
+
+        Route::prefix("/{idEvent}")->group(function () {
+            Route::patch("/outlet-registered", [EoEventController::class, 'outletRegistered']);
+            Route::post("/outlet-registered/accept", [EoEventController::class, 'acceptOutlet']);
+            Route::patch("/outlet-registered/{idRegistered}", [EoEventController::class, 'detailRegistered']);
+
+
+            Route::prefix("/tenants")->group(function () {
+                Route::patch("/", [EventInvitationController::class, 'findAvailableOutlets']);
+                Route::patch("/{idTenant}", [EventInvitationController::class, 'getDetail']);
+                Route::post("/{idTenant}/invite", [EventInvitationController::class, 'invite']);
+            });
+        });
     });
 });
 

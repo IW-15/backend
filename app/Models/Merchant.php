@@ -21,7 +21,8 @@ class Merchant extends Model
         "ktp",
         "photo",
         "license",
-        "npwp"
+        "npwp",
+        "score",
     ];
 
 

@@ -47,7 +47,8 @@ class OutletController extends Controller
             $outlet = Outlet::create(array_merge($validated, [
                 "id_user" => $user->id,
                 "id_merchant" => $merchant->id,
-                "rekening" => $user['rekening']
+                "rekening" => $user['rekening'],
+                "score" => $merchant->score,
             ]));
 
             $outlet->revenue;
@@ -86,6 +87,21 @@ class OutletController extends Controller
             return BaseResponse::success("Success retrieve outlets data", $outlet);
         } catch (Exception $error) {
             return BaseResponse::error("Error while retrieving outlets data", 500, $error->getMessage());
+        }
+    }
+
+    public function toggleInvitation($idOutlet, Outlet $outlet)
+    {
+        try {
+            $outlet = Outlet::with("revenue")->find($idOutlet);
+            if (!$outlet) {
+                return BaseResponse::error("Outlet not found", 404, "Outlet not found");
+            }
+            $outlet->update(["eventOpen" => !$outlet["eventOpen"]]);
+
+            return BaseResponse::success("Success toggle invitation outlet", $outlet);
+        } catch (Exception $error) {
+            return BaseResponse::error("Error while toggle invitation outlet", 500, $error->getMessage());
         }
     }
 

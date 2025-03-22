@@ -4,7 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Helpers\BaseResponse;
 use App\Models\Event;
+use App\Models\EventRegistered;
 use Exception;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -15,7 +17,7 @@ class EoEventController extends Controller
     {
         try {
             $validated = $request->validate([
-                "filter" => "nullable|in:progress,coming_soon,draft,all",
+                "filter" => "nullable|in:progress,coming_soon,draft,all,published",
                 "date" => "nullable|in:asc,desc"
             ]);
 
@@ -37,6 +39,9 @@ class EoEventController extends Controller
             switch ($validated['filter']) {
                 case 'draft':
                     $query->where("status", "draft");
+                    break;
+                case 'published':
+                    $query->where("status", "published");
                     break;
                 case 'progress':
                     $query->where("status", "published")->where("date", '>=', now()); // Include events whose date is today or in the future
@@ -194,6 +199,134 @@ class EoEventController extends Controller
             return BaseResponse::success("Event data publish successfully", $event);
         } catch (Exception $error) {
             return BaseResponse::error("Error while publish event data", 500, $error->getMessage());
+        }
+    }
+
+    public function outletRegistered(Request $request, $idEvent)
+    {
+        try {
+            $user = $request->user();
+            $eo = $user->eo;
+
+            // Step 1: Check if the event is valid
+            $event = Event::where('id', $idEvent)
+                ->where('id_eo', $eo->id) // Check that the event belongs to the EO
+                ->first(); // Use first() since we expect a single event
+
+            if (!$event) {
+                return BaseResponse::error("Event not found or does not belong to the specified EO.", 404, "Event not found");
+            }
+
+            // Step 2: Check if the event is published
+            if ($event->status !== "published") {
+                return BaseResponse::error("Event is not published.", 403, "Event status is not published");
+            }
+
+            // Step 3: Get all registered outlets for the event
+            $registeredOutlets = EventRegistered::where('id_event', $event->id)
+                ->with(['outlet', 'event', 'sme']) // Assume you have a relationship defined in the EventRegistered model
+                ->get();
+
+            // Return the list of registered outlets
+            return BaseResponse::success("Registered outlets retrieved successfully.", $registeredOutlets);
+        } catch (ModelNotFoundException $notFoundError) {
+            return BaseResponse::error("Data not found", 404, $notFoundError->getMessage());
+        } catch (ValidationException $validationError) {
+            return BaseResponse::error("Validation error", 422, json_encode($validationError->errors()));
+        } catch (Exception $error) {
+            return BaseResponse::error("Error while retrieving outlet registered data", 500, $error->getMessage());
+        }
+    }
+
+    public function detailRegistered(Request $request, $idEvent, $idRegistered)
+    {
+        try {
+            $user = $request->user();
+            $eo = $user->eo;
+
+            // Step 1: Check if the event is valid
+            $event = Event::where('id', $idEvent)
+                ->where('id_eo', $eo->id) // Check that the event belongs to the EO
+                ->first(); // Use first() since we expect a single event
+
+            if (!$event) {
+                return BaseResponse::error("Event not found or does not belong to the specified EO.", 404, "Event not found");
+            }
+
+            // Step 2: Check if the event is published
+            if ($event->status !== "published") {
+                return BaseResponse::error("Event is not published.", 403, "Event status is not published");
+            }
+
+            // Step 3: Get all registered outlets for the event
+            $registeredOutlets = EventRegistered::with(['outlet', 'event', 'sme'])
+                ->find($idRegistered);
+
+            if (!$registeredOutlets) {
+                return BaseResponse::error("Event registered data not found", 404, "Event registered data not found");
+            }
+
+            // Return the list of registered outlets
+            return BaseResponse::success("Registered outlets retrieved successfully.", $registeredOutlets);
+        } catch (ModelNotFoundException $notFoundError) {
+            return BaseResponse::error("Data not found", 404, $notFoundError->getMessage());
+        } catch (ValidationException $validationError) {
+            return BaseResponse::error("Validation error", 422, json_encode($validationError->errors()));
+        } catch (Exception $error) {
+            return BaseResponse::error("Error while retrieving outlet registered data", 500, $error->getMessage());
+        }
+    }
+
+    public function acceptOutlet(Request $request, $eventId)
+    {
+        try {
+            // Step 1: Validate input
+            $validated = $request->validate([
+                'outletId' => 'required|array', // Expecting it to be an array
+                'outletId.*' => 'exists:outlets,id', // Each outletId must exist in the outlets table
+            ]);
+
+            // If a single outlet ID is provided, convert it to an array
+            if (isset($request['outletId']) && !is_array($request['outletId'])) {
+                $validated['outletId'] = [$request['outletId']];
+            }
+
+            // Step 2: Check if the event exists and belongs to the EO
+            $user = $request->user();
+            $eo = $user->eo;
+
+            $event = Event::where('id', $eventId)
+                ->where('id_eo', $eo->id)
+                ->first();
+
+            if (!$event) {
+                return BaseResponse::error("Event not found or does not belong to the specified EO.", 404, "Event not found");
+            }
+
+            // Step 3: Check if the event status is published
+            if ($event->status !== "published") {
+                return BaseResponse::error("Event is not published.", 403, "Event status is not published");
+            }
+
+            // Step 4: Update the status of Event Registered entries
+            // Find the registered outlets that need to be updated
+            $updatedCount = EventRegistered::where('id_event', $event->id)
+                ->where('status', 'received')
+                ->whereIn('id_outlet', $validated['outletId'])
+                ->update(['status' => 'waiting']);
+
+            if ($updatedCount === 0) {
+                $msg = "No outlets updated; ensure outlet statuses are received.";
+                return BaseResponse::error($msg, 400, $msg);
+            }
+
+            return BaseResponse::success("Outlet registrations updated successfully to 'waiting'.", $updatedCount);
+        } catch (ModelNotFoundException $notFoundError) {
+            return BaseResponse::error("Data not found", 404, $notFoundError->getMessage());
+        } catch (ValidationException $validationError) {
+            return BaseResponse::error("Validation error", 422, json_encode($validationError->errors()));
+        } catch (Exception $error) {
+            return BaseResponse::error("Error while accepting outlet registrations", 500, $error->getMessage());
         }
     }
 }
