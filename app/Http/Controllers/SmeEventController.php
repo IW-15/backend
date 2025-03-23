@@ -121,7 +121,7 @@ class SmeEventController extends Controller
                 'status' => 'received',
                 'score' => $sme->score,
                 'date' => now(),
-            ])->with(["sme", "outlet", "event"])->get();
+            ])->with(["sme", "outlet", "event"])->get()->first();
 
             return BaseResponse::success("Outlet registered for the event successfully", $eventRegistered);
         } catch (ModelNotFoundException $notFoundError) {

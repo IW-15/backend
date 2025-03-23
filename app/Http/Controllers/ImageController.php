@@ -17,7 +17,8 @@ class ImageController extends Controller
 
         $file = File::get($path);
         $response = Response::make($file, 200);
-        $response->header('Content-Type', 'images');
+        // $response->header('Content-Type', 'images');
+        $response->header('Cache-Control', 'public, max-age=3600');
         return $response;
     }
 }
