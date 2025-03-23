@@ -20,4 +20,16 @@ class ProfileController extends Controller
             return BaseResponse::error("Error while check store data", 500, $error->getMessage());
         }
     }
+
+    public function eo(Request $request)
+    {
+        try {
+            $user = $request->user();
+            $eo = $user->eo;
+
+            return BaseResponse::success("true", ["user" => $user, "eo" => $eo]);
+        } catch (Exception $error) {
+            return BaseResponse::error("Error while check store data", 500, $error->getMessage());
+        }
+    }
 }

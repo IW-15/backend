@@ -91,7 +91,10 @@ class SmeEventController extends Controller
                 ->first();
 
             if (!$outlet) {
-                return BaseResponse::error("Outlet data not found", 404, "Outlet data not found");
+                return BaseResponse::error("Outlet data not found or not open to event", 404, "Outlet data not found");
+            }
+            if (!$outlet->eventOpen) {
+                return BaseResponse::error("Please make sure your outlet is open for event", 404, "Outlet data not found");
             }
 
             // Check if the event exists and is published

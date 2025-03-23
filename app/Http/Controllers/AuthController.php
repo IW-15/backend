@@ -113,9 +113,6 @@ class AuthController extends Controller
                 } else {
                     $score = "low";
                 }
-                echo $score;
-                echo $totalIncome;
-                echo $totalOutcome;
 
                 $merchant->update(["score" => $score]);
             });

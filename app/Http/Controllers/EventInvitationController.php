@@ -14,7 +14,22 @@ use Illuminate\Validation\ValidationException;
 
 class EventInvitationController extends Controller
 {
-    public function getAll(Request $request) {}
+    public function getAll(Request $request)
+    {
+        try {
+            // Step 1: Get the current user and their associated EO
+            $availableOutlets = Outlet::with("revenue")
+                ->get();
+
+            return BaseResponse::success("Available outlets retrieved successfully.", $availableOutlets);
+        } catch (ModelNotFoundException $notFoundError) {
+            return BaseResponse::error("Data not found", 404, $notFoundError->getMessage());
+        } catch (ValidationException $validationError) {
+            return BaseResponse::error("Validation error", 422, json_encode($validationError->errors()));
+        } catch (Exception $error) {
+            return BaseResponse::error("Error while retrieving available outlets", 500, $error->getMessage());
+        }
+    }
 
     public function findAvailableOutlets(Request $request, $eventId)
     {
@@ -33,14 +48,12 @@ class EventInvitationController extends Controller
                 return BaseResponse::error("Event not found or not accessible.", 404, "Event is either invalid or not accessible");
             }
 
-            // Step 3: Get the IDs of outlets that are already invited to the event
             $invitedOutlets = EventInvitation::where('id_event', $event->id)
                 ->pluck('id_outlet')
-                ->toArray(); // Get all invited outlet IDs
+                ->toArray();
 
-            // Step 4: Get all outlets that belong to the EO's merchant that haven't been invited
-            $availableOutlets = Outlet::with("revenue")->where('id_merchant', $eo->id) // Assuming EO is linked to a Merchant
-                ->whereNotIn('id', $invitedOutlets) // Exclude already invited outlets
+            $availableOutlets = Outlet::with("revenue")
+                ->whereNotIn('id', $invitedOutlets)
                 ->get();
 
             return BaseResponse::success("Available outlets retrieved successfully.", $availableOutlets);

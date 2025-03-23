@@ -53,7 +53,7 @@ Route::middleware("auth")->group(function () {
         Route::get("/", [OutletController::class, 'index']);
         Route::get("/{idOutlet}", [OutletController::class, 'show']);
         Route::post("/", [OutletController::class, 'create']);
-        Route::put("/{idOutlet}", [OutletController::class, 'update']);
+        Route::post("/{idOutlet}/update", [OutletController::class, 'update']);
         Route::delete("/{idOutlet}", [OutletController::class, 'delete']);
         Route::post("/{idOutlet}/toggle-invitation", [OutletController::class, 'toggleInvitation']);
     });
@@ -87,10 +87,15 @@ Route::middleware("auth")->group(function () {
 
 
 Route::middleware("auth.eo")->prefix("/eo")->group(function () {
+    Route::prefix("/profile")->group(function () {
+        Route::patch("/", [ProfileController::class, 'eo']);
+    });
+
     Route::prefix("/events")->group(function () {
         Route::patch("/", [EoEventController::class, 'getAll']);
         Route::post("/", [EoEventController::class, 'create']);
         Route::delete("/{idEvent}", [EoEventController::class, 'delete']);
+        Route::patch("/{idEvent}", [EoEventController::class, 'getDetail']);
         Route::post("/{idEvent}/update", [EoEventController::class, 'update']);
         Route::post("/{idEvent}/publish", [EoEventController::class, 'publish']);
 
@@ -98,7 +103,7 @@ Route::middleware("auth.eo")->prefix("/eo")->group(function () {
             Route::patch("/outlet-registered", [EoEventController::class, 'outletRegistered']);
             Route::post("/outlet-registered/accept", [EoEventController::class, 'acceptOutlet']);
             Route::patch("/outlet-registered/{idRegistered}", [EoEventController::class, 'detailRegistered']);
-
+            Route::post("/outlet-registered/reject", [EoEventController::class, 'reject']);
 
             Route::prefix("/tenants")->group(function () {
                 Route::patch("/", [EventInvitationController::class, 'findAvailableOutlets']);
@@ -107,6 +112,8 @@ Route::middleware("auth.eo")->prefix("/eo")->group(function () {
             });
         });
     });
+
+    Route::patch("/tenants", [EventInvitationController::class, 'getAll']);
 });
 
 Route::get("/", function () {

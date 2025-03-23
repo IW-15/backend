@@ -24,7 +24,8 @@ class Outlet extends Model
         'rekening',
         'address',
         "eventOpen",
-        "score"
+        "score",
+        "image",
     ];
 
     // Define the relationships

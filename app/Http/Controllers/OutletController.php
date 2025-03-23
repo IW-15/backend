@@ -42,7 +42,13 @@ class OutletController extends Controller
                 "phone" => "required|string|max:15", // Adjust max length as needed
                 "email" => "required|email|max:255", // Ensure email is unique in outlets
                 "address" => "required|string|max:255",
+                'image' => 'required|image|mimes:jpeg,jpg,png|max:10240',
             ]);
+
+            if ($request->hasFile("image")) {
+                $bannerPath = $request->file('image')->store('outlets', 'public');
+            }
+            $validated['image'] = $bannerPath;
 
             $outlet = Outlet::create(array_merge($validated, [
                 "id_user" => $user->id,
@@ -50,7 +56,7 @@ class OutletController extends Controller
                 "rekening" => $user['rekening'],
                 "score" => $merchant->score,
             ]));
-
+            $outlet->refresh();
             $outlet->revenue;
 
             return BaseResponse::success("Success creating outlets data", $outlet);
@@ -142,7 +148,13 @@ class OutletController extends Controller
                 "type" => "required|string|max:255",
                 "phone" => "required|string|max:15", // Adjust max length as needed
                 "address" => "required|string|max:255",
+                'image' => 'nullable|image|mimes:jpeg,jpg,png|max:10240',
             ]);
+
+            if ($request->hasFile("image")) {
+                $bannerPath = $request->file('image')->store('outlets', 'public');
+            }
+            $validated['image'] = $bannerPath;
 
             // Update the outlet
             $outlet->update($validated);

@@ -23,6 +23,7 @@ return new class extends Migration
             $table->string("rekening");
             $table->string("address");
             $table->boolean("eventOpen")->default(false);
+            $table->string("image");
             $table->enum("score", ["high", "medium", "low"])->default("low");
 
             $table->timestamps();

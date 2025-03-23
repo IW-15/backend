@@ -17,7 +17,7 @@ class ImageController extends Controller
 
         $file = File::get($path);
         $response = Response::make($file, 200);
-        $response->header('Content-Type', 'image/jpeg');
+        $response->header('Content-Type', 'images');
         return $response;
     }
 }
