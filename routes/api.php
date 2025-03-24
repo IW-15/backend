@@ -13,6 +13,7 @@ use App\Http\Controllers\OutletController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\RepaymentController;
 use App\Http\Controllers\SmeEventController;
+use App\Http\Controllers\SmeInvitationController;
 use App\Http\Controllers\TransactionController;
 use App\Models\CreditScore;
 use App\Models\OutletRevenue;
@@ -83,8 +84,14 @@ Route::middleware("auth")->group(function () {
         Route::patch("/{idRegisteredEvent}", [SmeEventController::class, 'getDetailRegis']);
         Route::post("/{idRegisteredEvent}/pay", [SmeEventController::class, 'pay']);
     });
-});
 
+    Route::prefix("/invitation")->group(function () {
+        Route::patch("/", [SmeInvitationController::class, 'all']);
+        Route::patch("/{idInvitation}", [SmeInvitationController::class, 'detail']);
+        Route::post("/{idInvitation}/accept", [SmeInvitationController::class, 'accept']);
+        Route::post("/{idInvitation}/reject", [SmeInvitationController::class, 'reject']);
+    });
+});
 
 Route::middleware("auth.eo")->prefix("/eo")->group(function () {
     Route::prefix("/profile")->group(function () {
