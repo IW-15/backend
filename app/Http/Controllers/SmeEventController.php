@@ -29,7 +29,7 @@ class SmeEventController extends Controller
             $query = Event::where("status", "published");
 
             // Apply filters based on the validated input
-            if (isset($validated['category'])) {
+            if (isset($validated['category']) && !!$validated['category']) {
                 $query->whereIn("category", $validated['category']);
             }
             if (isset($validated['minDate'])) {
