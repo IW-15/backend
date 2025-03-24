@@ -22,7 +22,7 @@ class AuthController extends Controller
     {
         try {
             $validated = $request->validate([
-                'phone' => 'required|regex:/^08[0-9]{8,10}$/',
+                'phone' => 'required|regex:/^08[0-9]{4,20}$/',
                 'password' => 'required|string|min:8',
             ]);
 
@@ -48,7 +48,7 @@ class AuthController extends Controller
         try {
             $validated = $request->validate([
                 "email" => "required|email|unique:users,email",
-                "phone" => "required|regex:/^08[0-9]{4,10}$/|unique:users,phone",
+                "phone" => "required|regex:/^08[0-9]{4,20}$/|unique:users,phone",
                 "password" => "required|string|min:8|confirmed",
                 "rekening" => "required|string",
                 "fullName" => "required|string",
